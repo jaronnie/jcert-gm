@@ -61,5 +61,5 @@ $ jcert-gm completion fish > ~/.config/fish/completions/jcert-gm.fish
 }
 
 func init() {
-
+	rootCmd.AddCommand(completionCmd)
 }
