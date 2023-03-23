@@ -73,6 +73,9 @@ func initConfig() {
 		viper.SetConfigType("toml")
 		viper.SetConfigName("config")
 	}
+	if Path != "" {
+		os.MkdirAll(Path, 0o755)
+	}
 
 	viper.AutomaticEnv() // read in environment variables that match
 
