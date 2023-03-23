@@ -9,11 +9,32 @@ import (
 	"crypto/rand"
 	"crypto/x509/pkix"
 	"encoding/pem"
+	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/spf13/cobra"
 	"github.com/tjfoc/gmsm/sm2"
 	"github.com/tjfoc/gmsm/x509"
+)
+
+/*
+
+	csr 即证书签名请求, 可以通过 csr 向 ca 机构申请证书, 在本工具中可以通过执行 init 命令, 模拟了 ca 机构创建出机构的根 ca 和 私钥
+	可通过 csr 命令生成 csr 文件后, 再执行 cert 命令将 csr 作为参数传进去, 即可申请到证书.
+
+	通过本命令将生成三个文件:
+	1. 私钥, 首先生成私钥, 只支持使用 sm2 国密算法
+	2. 公钥, 从生成的私钥中取出公钥, 保存在文件中
+	3. 根据私钥生成 csr 证书签名文件, 可选择签名算法, 默认只支持 sm2-sha256
+
+*/
+
+var (
+	CN   string   // common name, 即 hyperchain 的 hostname
+	O    []string // 随意, 但对于 hyperchain 的 nvp 节点来说, OU 即 vp 节点的 hostname
+	OU   []string // 部门, 对于 hyperchain 来说用来区分不同证书类型, ecert 对应 vp 节点, rcert 对应 nvp 节点, sdkcert 对应 sdkcert
+	Addr []string // dns addr, hyperchain tls 证书填写
 )
 
 // csrCmd represents the csr command
@@ -22,11 +43,20 @@ var csrCmd = &cobra.Command{
 	Short: "generate csr",
 	Long:  `generate csr`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if CN == "" {
+			cobra.CheckErr("cn is empty")
+		}
 		return generateCsr()
 	},
 }
 
 func generateCsr() error {
+	var (
+		generatedKey = filepath.Join(Path, fmt.Sprintf("%s.key", CN))
+		generatedPub = filepath.Join(Path, fmt.Sprintf("%s.pub", CN))
+		generatedCsr = filepath.Join(Path, fmt.Sprintf("%s.csr", CN))
+	)
+
 	privateKey, err := sm2.GenerateKey(rand.Reader)
 	if err != nil {
 		panic(err)
@@ -45,12 +75,12 @@ func generateCsr() error {
 	if err != nil {
 		return err
 	}
-	err = os.WriteFile("node.pub", publicKeyPem, 0o755)
+	err = os.WriteFile(generatedPub, publicKeyPem, 0o755)
 	if err != nil {
 		return err
 	}
 
-	err = os.WriteFile("node.key", privateKeyPem, 0o755)
+	err = os.WriteFile(generatedKey, privateKeyPem, 0o755)
 	if err != nil {
 		return err
 	}
@@ -58,11 +88,13 @@ func generateCsr() error {
 	// 创建证书签名请求模板
 	template := x509.CertificateRequest{
 		Subject: pkix.Name{
-			CommonName:         "node1",
-			Organization:       []string{"hyperchain"},
-			OrganizationalUnit: []string{"ecert"},
+			CommonName:         CN,
+			Organization:       O,
+			OrganizationalUnit: OU,
 		},
-		PublicKeyAlgorithm: x509.PublicKeyAlgorithm(x509.SM2WithSM3),
+		SignatureAlgorithm: x509.SM2WithSHA256,
+		PublicKeyAlgorithm: x509.PublicKeyAlgorithm(x509.SM2WithSHA256),
+		DNSNames:           Addr,
 	}
 
 	// 生成证书签名请求
@@ -77,7 +109,7 @@ func generateCsr() error {
 		Bytes: csrBytes,
 	})
 
-	err = os.WriteFile("node.csr", csrPem, 0o755)
+	err = os.WriteFile(generatedCsr, csrPem, 0o755)
 	if err != nil {
 		return err
 	}
@@ -86,4 +118,13 @@ func generateCsr() error {
 
 func init() {
 	rootCmd.AddCommand(csrCmd)
+
+	csrCmd.Flags().StringVarP(&CN, "CN", "", "", "set CommonName")
+	csrCmd.Flags().StringSliceVarP(&O, "O", "", nil, "set Organization")
+	csrCmd.Flags().StringSliceVarP(&OU, "OU", "", nil, "set OrganizationUnit")
+	csrCmd.Flags().StringSliceVarP(&Addr, "addr", "", nil, "set dns addr")
+
+	csrCmd.Flags().StringVarP(&Path, "path", "p", "", "save path")
+
+	csrCmd.MarkFlagRequired("CN")
 }

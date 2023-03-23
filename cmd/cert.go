@@ -8,6 +8,7 @@ package cmd
 import (
 	"encoding/pem"
 	"errors"
+	"fmt"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -17,6 +18,10 @@ import (
 
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
+)
+
+var (
+	Csr string
 )
 
 // certCmd represents the cert command
@@ -33,7 +38,7 @@ func generateCert() error {
 	configDir := filepath.Dir(viper.ConfigFileUsed())
 
 	// 读取CSR文件
-	csrPEM, err := os.ReadFile("node.csr")
+	csrPEM, err := os.ReadFile(Csr)
 	if err != nil {
 		return err
 	}
@@ -57,13 +62,15 @@ func generateCert() error {
 
 	// 创建证书模板
 	template := &x509.Certificate{
-		SerialNumber: big.NewInt(1),
-		Subject:      csr.Subject,
-		NotBefore:    time.Now(),
-		NotAfter:     time.Now().Add(365 * 24 * time.Hour),
-		SubjectKeyId: []byte{1, 2, 3, 4, 6},
-		KeyUsage:     x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:  []x509.ExtKeyUsage{x509.ExtKeyUsageServerAuth},
+		SerialNumber:       big.NewInt(1),
+		Subject:            csr.Subject,
+		NotBefore:          time.Now(),
+		NotAfter:           time.Now().Add(365 * 24 * time.Hour),
+		SubjectKeyId:       []byte{1, 2, 3, 4, 6},
+		KeyUsage:           x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:        []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageCodeSigning, x509.ExtKeyUsageEmailProtection},
+		SignatureAlgorithm: csr.SignatureAlgorithm,
+		DNSNames:           csr.DNSNames,
 	}
 
 	// 读取机构 ca 文件
@@ -102,21 +109,14 @@ func generateCert() error {
 
 	// 将证书保存为PEM格式
 	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
-	os.WriteFile("node.cert", certPEM, 0o755)
 
-	return nil
+	generatedCert := filepath.Join(Path, fmt.Sprintf("%s.cert", csr.Subject.CommonName))
+	return os.WriteFile(generatedCert, certPEM, 0o755)
 }
 
 func init() {
 	rootCmd.AddCommand(certCmd)
 
-	// Here you will define your flags and configuration settings.
-
-	// Cobra supports Persistent Flags which will work for this command
-	// and all subcommands, e.g.:
-	// certCmd.PersistentFlags().String("foo", "", "A help for foo")
-
-	// Cobra supports local flags which will only run when this command
-	// is called directly, e.g.:
-	// certCmd.Flags().BoolP("toggle", "t", false, "Help message for toggle")
+	certCmd.Flags().StringVarP(&Csr, "csr", "", "", "set csr file path")
+	certCmd.MarkFlagRequired("csr")
 }
