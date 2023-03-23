@@ -4,13 +4,26 @@
 ## Usage
 
 ```shell
-jcert-gm init       # 初始化机构的根 CA, 需要保存好
-jcert-gm csr        # 生成 privateKey 和 csr
-jcert-gm cert       # 根据 csr 生成 cert
-jcert-gm match      # 证书和私钥是否匹配
-jecet-gm print      # 打印证书内容
-jcert-gm parse      # 解析证书成对应结构
+jcert-gm completion zsh > "${fpath[1]}/_jcert-gm" # 命令自动补全
+jcert-gm init                                     # 初始化机构的根 CA, 需要保存好
+jcert-gm csr                                      # 生成 privateKey 和 csr
+jcert-gm cert                                     # 根据 csr 生成 cert
 ```
+
+## example
+
+```shell
+./generate.sh
+```
+
+将会生成 4 个节点证书, 1 个 sdk 证书, 1 个 tls 证书
+
+## todo
+
+- [ ] jcert-gm parse
+- [ ] jcert-gm scope
+- [ ] jcert-gm print
+- [ ] jcert-gm match
 
 ## 鸣谢
 
