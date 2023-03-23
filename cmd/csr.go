@@ -92,8 +92,8 @@ func generateCsr() error {
 			Organization:       O,
 			OrganizationalUnit: OU,
 		},
-		SignatureAlgorithm: x509.SM2WithSHA256,
-		PublicKeyAlgorithm: x509.PublicKeyAlgorithm(x509.SM2WithSHA256),
+		SignatureAlgorithm: x509.SM2WithSM3,
+		PublicKeyAlgorithm: x509.PublicKeyAlgorithm(x509.SM2WithSM3),
 		DNSNames:           Addr,
 	}
 

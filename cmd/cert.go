@@ -69,6 +69,7 @@ func generateCert() error {
 		SubjectKeyId:       []byte{1, 2, 3, 4, 6},
 		KeyUsage:           x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:        []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageCodeSigning, x509.ExtKeyUsageEmailProtection},
+		PublicKeyAlgorithm: csr.PublicKeyAlgorithm,
 		SignatureAlgorithm: csr.SignatureAlgorithm,
 		DNSNames:           csr.DNSNames,
 	}
