@@ -12,12 +12,7 @@ import (
 )
 
 /*
-	根据场景生成 hyperchain 的所有证书文件
-	1. 创建联盟链
-	2. 创建命名空间
-	3. 加入联盟链
-	4. 增加 vp 节点
-	5. 增加 nvp 节点
+	根据场景生成所有证书文件
 */
 
 // scopeCmd represents the scope command

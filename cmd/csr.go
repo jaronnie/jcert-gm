@@ -31,10 +31,10 @@ import (
 */
 
 var (
-	CN   string   // common name, 即 hyperchain 的 hostname
-	O    []string // 随意, 但对于 hyperchain 的 nvp 节点来说, OU 即 vp 节点的 hostname
-	OU   []string // 部门, 对于 hyperchain 来说用来区分不同证书类型, ecert 对应 vp 节点, rcert 对应 nvp 节点, sdkcert 对应 sdkcert
-	Addr []string // dns addr, hyperchain tls 证书填写
+	CN   string
+	O    []string
+	OU   []string
+	Addr []string
 )
 
 // csrCmd represents the csr command
