@@ -22,7 +22,6 @@ jcert-gm cert                                     # 根据 csr 生成 cert
 
 - [ ] jcert-gm parse
 - [ ] jcert-gm scope
-- [ ] jcert-gm print
 - [ ] jcert-gm match
 
 ## 鸣谢
