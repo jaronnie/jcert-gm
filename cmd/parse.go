@@ -7,7 +7,6 @@ package cmd
 
 import (
 	"encoding/pem"
-	"errors"
 	"fmt"
 	"os"
 	"strings"
@@ -22,58 +21,42 @@ var parseCmd = &cobra.Command{
 	Use:   "parse",
 	Short: "parse csr or certs",
 	Long:  `parse cer or certs`,
-	Args:  cobra.ExactArgs(2),
-	ValidArgsFunction: func(cmd *cobra.Command, args []string, toComplete string) ([]string, cobra.ShellCompDirective) {
-		return []string{"csr", "cert"}, cobra.ShellCompDirectiveDefault
-	},
-	RunE: func(cmd *cobra.Command, args []string) error {
-		return parse(cmd, args)
-	},
+	Args:  cobra.ExactArgs(1),
+	RunE:  parse,
 }
 
 func parse(cmd *cobra.Command, args []string) error {
-	// 分为 csr 和 cert
-	t := args[0]
-	f := args[1]
+	// 读取文件
+	file, err := os.ReadFile(args[0])
+	if err != nil {
+		return err
+	}
+
+	// 解码文件
+	var t string
+	block, _ := pem.Decode(file)
+	if block != nil && block.Type == "CERTIFICATE REQUEST" {
+		t = "csr"
+	} else if block.Type == "CERTIFICATE" {
+		t = "cert"
+	}
 
 	if t == "csr" {
-		// 读取CSR文件
-		csrPEM, err := os.ReadFile(f)
+		parse, err := x509.ParseCertificateRequest(block.Bytes)
 		if err != nil {
 			return err
 		}
-
-		// 解码CSR文件
-		csrBlock, _ := pem.Decode(csrPEM)
-		if csrBlock == nil || csrBlock.Type != "CERTIFICATE REQUEST" {
-			return errors.New("type is not CERTIFICATE REQUEST")
-		}
-		csr, err := x509.ParseCertificateRequest(csrBlock.Bytes)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("common name: %s\n", csr.Subject.CommonName)
-		fmt.Printf("Organization: %s\n", strings.Join(csr.Subject.Organization, ","))
+		fmt.Printf("common name: %s\n", parse.Subject.CommonName)
+		fmt.Printf("Organization: %s\n", strings.Join(parse.Subject.Organization, ","))
 	}
 
 	if t == "cert" {
-		// 读取机构 ca 文件
-		certPEM, err := os.ReadFile(f)
+		parse, err := x509.ParseCertificate(block.Bytes)
 		if err != nil {
 			return err
 		}
-
-		// 解码 ca 文件
-		certBlock, _ := pem.Decode(certPEM)
-		if err != nil {
-			return err
-		}
-		cert, err := x509.ParseCertificate(certBlock.Bytes)
-		if err != nil {
-			return err
-		}
-		fmt.Printf("common name: %s\n", cert.Subject.CommonName)
-		fmt.Printf("Organization: %s\n", strings.Join(cert.Subject.Organization, ","))
+		fmt.Printf("common name: %s\n", parse.Subject.CommonName)
+		fmt.Printf("Organization: %s\n", strings.Join(parse.Subject.Organization, ","))
 	}
 
 	return nil
