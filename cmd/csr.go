@@ -67,7 +67,7 @@ func generateCsr() error {
 		return err
 	}
 	privateKeyPem := pem.EncodeToMemory(&pem.Block{
-		Type:  "EC PRIVATE KEY",
+		Type:  "PRIVATE KEY",
 		Bytes: privateKeyBytes,
 	})
 	pubKey, _ := privateKey.Public().(*sm2.PublicKey)
