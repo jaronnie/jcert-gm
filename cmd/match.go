@@ -11,6 +11,7 @@ import (
 	"errors"
 	"fmt"
 	"os"
+	"strings"
 
 	gsm2 "github.com/emmansun/gmsm/sm2"
 	"github.com/emmansun/gmsm/smx509"
@@ -75,8 +76,8 @@ func match(cmd *cobra.Command, args []string) error {
 	if keyBlock == nil {
 		return errors.New("key block is nil")
 	}
-	if keyBlock.Type != "EC PRIVATE KEY" {
-		return errors.New("type is not EC PRIVATE KEY")
+	if !strings.Contains(keyBlock.Type, "PRIVATE KEY") {
+		return errors.New("type is not PRIVATE KEY")
 	}
 	pk, err := x509.ReadPrivateKeyFromPem(keyPem, nil)
 	if err != nil {
