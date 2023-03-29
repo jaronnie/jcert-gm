@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 
 	"github.com/fatih/color"
+	"github.com/spf13/afero"
 	"github.com/spf13/cobra"
 	"github.com/spf13/viper"
 )
@@ -51,7 +52,7 @@ func init() {
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
 
-	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.jcert-gm.yaml)")
+	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.jcert-gm/config.toml)")
 	rootCmd.PersistentFlags().StringVarP(&Path, "path", "p", "", "generated file output path")
 
 	// Cobra also supports local flags, which will only run
@@ -69,13 +70,28 @@ func initConfig() {
 		home, err := os.UserHomeDir()
 		cobra.CheckErr(err)
 
+		configDir := filepath.Join(home, ".jcert-gm")
+		configFilePath := filepath.Join(configDir, "config.toml")
+
+		if err = os.MkdirAll(configDir, 0o755); err != nil {
+			cobra.CheckErr(err)
+		}
+		f := afero.NewOsFs()
+
+		if b, _ := afero.Exists(f, configFilePath); !b {
+			_, err = f.Create(configFilePath)
+			cobra.CheckErr(err)
+		}
+
 		// Search config in home directory with name "jcert" (without extension).
-		viper.AddConfigPath(filepath.Join(home, ".jcert-gm"))
+		viper.AddConfigPath(configDir)
 		viper.SetConfigType("toml")
 		viper.SetConfigName("config")
 	}
 	if Path != "" {
-		os.MkdirAll(Path, 0o755)
+		if err := os.MkdirAll(Path, 0o755); err != nil {
+			cobra.CheckErr(err)
+		}
 	}
 
 	viper.AutomaticEnv() // read in environment variables that match
