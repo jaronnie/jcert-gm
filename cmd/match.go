@@ -12,6 +12,8 @@ import (
 	"fmt"
 	"os"
 
+	gsm2 "github.com/emmansun/gmsm/sm2"
+	"github.com/emmansun/gmsm/smx509"
 	"github.com/spf13/cobra"
 	"github.com/tjfoc/gmsm/sm2"
 	"github.com/tjfoc/gmsm/x509"
@@ -57,6 +59,13 @@ func match(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
+	pubPEM := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: cert.RawSubjectPublicKeyInfo})
+
+	pub, err := x509.ReadPublicKeyFromPem(pubPEM)
+	if err != nil {
+		return err
+	}
+
 	// 解码文件
 	keyPem, err := os.ReadFile(tf)
 	if err != nil {
@@ -71,15 +80,22 @@ func match(cmd *cobra.Command, args []string) error {
 	}
 	pk, err := x509.ReadPrivateKeyFromPem(keyPem, nil)
 	if err != nil {
-		return err
+		// 有可能会发生错误, 原因是因为该库支持了 pkcs8 格式的私钥存储格式. 还有 EC PRIVATE KEY 的格式.
+		ecpk, err := smx509.ParseECPrivateKey(keyBlock.Bytes)
+		if err != nil {
+			return err
+		}
+		// 使用 EC PRIVATE KEY 的校验逻辑
+		r, s, err := gsm2.SignWithSM2(rand.Reader, ecpk, nil, []byte("sign"))
+		if err != nil {
+			return err
+		}
+		b := gsm2.VerifyWithSM2(&ecpk.PublicKey, nil, []byte("sign"), r, s)
+		fmt.Println(b)
+		return nil
 	}
 
-	pubPEM := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: cert.RawSubjectPublicKeyInfo})
-
-	pub, err := x509.ReadPublicKeyFromPem(pubPEM)
-	if err != nil {
-		return err
-	}
+	// 使用 pkcs8 的正常校验逻辑
 
 	// 原理是:
 	// 如果签名结果 r 和 s 是由正确的私钥对消息 "sign" 生成的
