@@ -6,14 +6,18 @@ Copyright © 2023 jaronnie <jaron@jaronnie.com>
 package cmd
 
 import (
+	"bytes"
+	"encoding/base64"
 	"encoding/pem"
-	"errors"
 	"fmt"
 	"math/big"
 	"os"
 	"path/filepath"
 	"time"
 
+	"github.com/pkg/errors"
+
+	"github.com/emmansun/gmsm/pkcs7"
 	"github.com/tjfoc/gmsm/x509"
 
 	"github.com/spf13/cobra"
@@ -21,7 +25,8 @@ import (
 )
 
 var (
-	Csr string
+	Csr    string
+	Output string
 )
 
 // certCmd represents the cert command
@@ -108,16 +113,67 @@ func generateCert() error {
 		return err
 	}
 
-	// 将证书保存为PEM格式
+	// 将证书转换为PEM格式
 	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
 
-	generatedCert := filepath.Join(Path, fmt.Sprintf("%s.cert", csr.Subject.CommonName))
-	return os.WriteFile(generatedCert, certPEM, 0o755)
+	if Output == "pem" {
+		generatedCert := filepath.Join(Path, fmt.Sprintf("%s.cert", csr.Subject.CommonName))
+		pem := savaCertToPem(certPEM, caPEM)
+		os.WriteFile(generatedCert, pem, 0o755)
+		return nil
+	}
+
+	if Output == "pkcs7" {
+		generatedCert := filepath.Join(Path, fmt.Sprintf("%s.p7b", csr.Subject.CommonName))
+		p7b, err := saveCertToPkcs7(certPEM, caPEM)
+		if err != nil {
+			return err
+		}
+
+		os.WriteFile(generatedCert, p7b, 0o755)
+		return nil
+	}
+	return errors.Errorf("not suuport output %s", Output)
+}
+
+func saveCertToPkcs7(cert []byte, ca []byte) ([]byte, error) {
+	b := savaCertToPem(cert, ca)
+
+	buffer := &bytes.Buffer{}
+	for {
+		block, rest := pem.Decode(b)
+		if block == nil {
+			break
+		}
+		buffer.Write(block.Bytes)
+		b = rest
+	}
+
+	p7b, err := pkcs7.DegenerateCertificate(buffer.Bytes())
+	if err != nil {
+		return nil, err
+	}
+
+	s := base64.StdEncoding.EncodeToString(p7b)
+
+	return []byte(s), nil
+}
+
+func savaCertToPem(cert []byte, ca []byte) []byte {
+	buffer := &bytes.Buffer{}
+
+	buffer.Write(ca)
+	buffer.Write([]byte("\n"))
+	buffer.Write(cert)
+
+	return buffer.Bytes()
 }
 
 func init() {
 	rootCmd.AddCommand(certCmd)
 
 	certCmd.Flags().StringVarP(&Csr, "csr", "", "", "set csr file path")
+	certCmd.Flags().StringVarP(&Output, "output", "o", "pem", "set cert block type")
+
 	certCmd.MarkFlagRequired("csr")
 }

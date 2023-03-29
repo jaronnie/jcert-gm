@@ -23,13 +23,12 @@ var transCmd = &cobra.Command{
 	Long:  `trans pkcs7 to pem`,
 	Args:  cobra.ExactArgs(1),
 	Run: func(cmd *cobra.Command, args []string) {
-
 		f := args[0]
 
 		b, err := os.ReadFile(f)
 		cobra.CheckErr(err)
 
-		p, err := base64.RawStdEncoding.DecodeString(string(b))
+		p, err := base64.StdEncoding.DecodeString(string(b))
 		cobra.CheckErr(err)
 
 		// 解码 PKCS#7 数据

@@ -7,11 +7,11 @@ package cmd
 
 import (
 	"encoding/pem"
-	"errors"
 	"fmt"
 	"os"
 
-	"github.com/emmansun/gmsm/smx509"
+	"github.com/tjfoc/gmsm/x509"
+
 	"github.com/spf13/cobra"
 )
 
@@ -27,20 +27,22 @@ This application is a tool to generate the needed files
 to quickly create a Cobra application.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		f := args[0]
-		keyPem, err := os.ReadFile(f)
+		p, err := os.ReadFile(f)
 		if err != nil {
 			return err
 		}
-		keyBlock, _ := pem.Decode(keyPem)
-		if keyBlock == nil {
-			return errors.New("key block is nil")
+		for {
+			keyBlock, rest := pem.Decode(p)
+			if keyBlock == nil {
+				break
+			}
+			c, err := x509.ParseCertificate(keyBlock.Bytes)
+			if err != nil {
+				return err
+			}
+			fmt.Println(c)
+			p = rest
 		}
-		pk, err := smx509.ParseTypedECPrivateKey(keyBlock.Bytes)
-		if err != nil {
-			return err
-		}
-		fmt.Println(pk)
-
 		return nil
 	},
 }
