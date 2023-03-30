@@ -13,6 +13,8 @@ import (
 
 	"github.com/tjfoc/gmsm/x509"
 
+	"github.com/fatih/color"
+
 	"github.com/spf13/cobra"
 )
 
@@ -32,33 +34,48 @@ func parse(cmd *cobra.Command, args []string) error {
 		return err
 	}
 
-	// 解码文件
-	var t string
-	block, _ := pem.Decode(file)
-	if block != nil && block.Type == "CERTIFICATE REQUEST" {
-		t = "csr"
-	} else if block.Type == "CERTIFICATE" {
-		t = "cert"
-	}
+	count := 0
 
-	if t == "csr" {
-		parse, err := x509.ParseCertificateRequest(block.Bytes)
-		if err != nil {
-			return err
+	for {
+		// 解码文件
+		block, rest := pem.Decode(file)
+		if block == nil {
+			break
 		}
-		fmt.Printf("common name: %s\n", parse.Subject.CommonName)
-		fmt.Printf("Organization: %s\n", strings.Join(parse.Subject.Organization, ","))
-	}
 
-	if t == "cert" {
-		parse, err := x509.ParseCertificate(block.Bytes)
-		if err != nil {
-			return err
+		if count >= 1 {
+			fmt.Printf("\n===================================\n")
 		}
-		fmt.Printf("common name: %s\n", parse.Subject.CommonName)
-		fmt.Printf("Organization: %s\n", strings.Join(parse.Subject.Organization, ","))
-	}
 
+		if block.Type == "CERTIFICATE REQUEST" {
+			parse, err := x509.ParseCertificateRequest(block.Bytes)
+			if err != nil {
+				return err
+			}
+			fmt.Println(color.BlueString("CERTIFICATE REQUEST\n"))
+			fmt.Println(color.CyanString("Subject:\n"))
+			fmt.Printf("common name: %s\n", parse.Subject.CommonName)
+			fmt.Printf("Organization: %s\n", strings.Join(parse.Subject.Organization, ","))
+			fmt.Printf("Organization Unit: %s\n", strings.Join(parse.Subject.OrganizationalUnit, ","))
+		} else if block.Type == "CERTIFICATE" {
+			parse, err := x509.ParseCertificate(block.Bytes)
+			if err != nil {
+				return err
+			}
+			fmt.Println(color.BlueString("CERTIFICATE\n"))
+			fmt.Println(color.CyanString("Issuer:\n"))
+			fmt.Printf("common name: %s\n", parse.Issuer.CommonName)
+			fmt.Printf("Organization: %s\n", strings.Join(parse.Issuer.Organization, ","))
+			fmt.Printf("Organization Unit: %s\n", strings.Join(parse.Issuer.OrganizationalUnit, ","))
+
+			fmt.Println(color.CyanString("\nSubject:\n"))
+			fmt.Printf("common name: %s\n", parse.Subject.CommonName)
+			fmt.Printf("Organization: %s\n", strings.Join(parse.Subject.Organization, ","))
+			fmt.Printf("Organization Unit: %s\n", strings.Join(parse.Subject.OrganizationalUnit, ","))
+		}
+		file = rest
+		count += 1
+	}
 	return nil
 }
 
