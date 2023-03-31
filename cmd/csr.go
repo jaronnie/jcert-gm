@@ -126,5 +126,5 @@ func init() {
 
 	csrCmd.Flags().StringVarP(&Path, "path", "p", "", "save path")
 
-	csrCmd.MarkFlagRequired("CN")
+	_ = csrCmd.MarkFlagRequired("CN")
 }

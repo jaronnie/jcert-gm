@@ -119,7 +119,7 @@ func generateCert() error {
 	if Output == "pem" {
 		generatedCert := filepath.Join(Path, fmt.Sprintf("%s.cert", csr.Subject.CommonName))
 		pem := savaCertToPem(certPEM, caPEM)
-		os.WriteFile(generatedCert, pem, 0o755)
+		_ = os.WriteFile(generatedCert, pem, 0o755)
 		return nil
 	}
 
@@ -130,7 +130,7 @@ func generateCert() error {
 			return err
 		}
 
-		os.WriteFile(generatedCert, p7b, 0o755)
+		_ = os.WriteFile(generatedCert, p7b, 0o755)
 		return nil
 	}
 	return errors.Errorf("not suuport output %s", Output)
@@ -175,5 +175,5 @@ func init() {
 	certCmd.Flags().StringVarP(&Csr, "csr", "", "", "set csr file path")
 	certCmd.Flags().StringVarP(&Output, "output", "o", "pem", "set cert block type")
 
-	certCmd.MarkFlagRequired("csr")
+	_ = certCmd.MarkFlagRequired("csr")
 }
