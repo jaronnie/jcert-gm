@@ -48,16 +48,29 @@ func match(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	certBlock, _ := pem.Decode(certFile)
-	if certBlock == nil {
-		return errors.New("cert block is nil")
+
+	var cert *x509.Certificate
+
+	for {
+		certBlock, rest := pem.Decode(certFile)
+		if certBlock == nil {
+			break
+		}
+		certFile = rest
+
+		if certBlock.Type == "CERTIFICATE" {
+			xcert, err := x509.ParseCertificate(certBlock.Bytes)
+			if err != nil {
+				return err
+			}
+			if !xcert.IsCA {
+				cert = xcert
+			}
+		}
 	}
-	if certBlock != nil && certBlock.Type != "CERTIFICATE" {
-		return errors.New("type is not CERTIFICATE")
-	}
-	cert, err := x509.ParseCertificate(certBlock.Bytes)
-	if err != nil {
-		return err
+
+	if cert == nil {
+		return errors.New(" type is not CERTIFICATE")
 	}
 
 	pubPEM := pem.EncodeToMemory(&pem.Block{Type: "PUBLIC KEY", Bytes: cert.RawSubjectPublicKeyInfo})
@@ -72,14 +85,27 @@ func match(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-	keyBlock, _ := pem.Decode(keyPem)
-	if keyBlock == nil {
-		return errors.New("key block is nil")
+
+	var keyBlock *pem.Block
+
+	for {
+		xkeyBlock, rest := pem.Decode(keyPem)
+		if xkeyBlock == nil {
+			break
+		}
+		keyPem = rest
+
+		if strings.Contains(xkeyBlock.Type, "PRIVATE KEY") {
+			keyBlock = xkeyBlock
+		}
+
 	}
-	if !strings.Contains(keyBlock.Type, "PRIVATE KEY") {
+
+	if keyBlock == nil {
 		return errors.New("type is not PRIVATE KEY")
 	}
-	pk, err := x509.ReadPrivateKeyFromPem(keyPem, nil)
+
+	pk, err := x509.ParsePKCS8PrivateKey(keyBlock.Bytes, nil)
 	if err != nil {
 		// 有可能会发生错误, 原因是因为该库支持了 pkcs8 格式的私钥存储格式. 还有 EC PRIVATE KEY 的格式.
 		ecpk, err := smx509.ParseECPrivateKey(keyBlock.Bytes)

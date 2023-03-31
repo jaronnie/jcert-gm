@@ -42,6 +42,7 @@ func parse(cmd *cobra.Command, args []string) error {
 		if block == nil {
 			break
 		}
+		file = rest
 
 		if count >= 1 {
 			fmt.Printf("\n===================================\n")
@@ -73,7 +74,6 @@ func parse(cmd *cobra.Command, args []string) error {
 			fmt.Printf("Organization: %s\n", strings.Join(parse.Subject.Organization, ","))
 			fmt.Printf("Organization Unit: %s\n", strings.Join(parse.Subject.OrganizationalUnit, ","))
 		}
-		file = rest
 		count += 1
 	}
 	return nil
