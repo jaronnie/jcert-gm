@@ -23,8 +23,8 @@ import (
 // initCmd represents the init command
 var initCmd = &cobra.Command{
 	Use:   "init",
-	Short: "初始化机构的根 CA",
-	Long:  `初始化机构的根 CA`,
+	Short: "Initialize the root ca of the mechanism",
+	Long:  `Initialize the root ca of the mechanism`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return generateAuthorityRootCA()
 	},
