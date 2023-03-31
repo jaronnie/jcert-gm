@@ -38,6 +38,3 @@ jobs:
           # Optional: if set to true then the action don't cache or restore ~/.cache/go-build.
           # skip-build-cache: true
 
-          # optionally use a specific version of Go rather than the latest one
-          version: '1.20.1'
-
