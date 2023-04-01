@@ -46,12 +46,12 @@ jobs:
 
       - name: Docker build and push
         run: |
-          docker build -t jaronnie/gvm:${{ steps.get_version.outputs.VERSION }} .
-          docker push jaronnie/gvm:${{ steps.get_version.outputs.VERSION }}
-          docker tag jaronnie/gvm:${{ steps.get_version.outputs.VERSION }} jaronnie/gvm:latest
-          docker push jaronnie/gvm:latest
+          docker build -t jaronnie/jcert-gm:${{ steps.get_version.outputs.VERSION }} .
+          docker push jaronnie/jcert-gm:${{ steps.get_version.outputs.VERSION }}
+          docker tag jaronnie/jcert-gm:${{ steps.get_version.outputs.VERSION }} jaronnie/jcert-gm:latest
+          docker push jaronnie/jcert-gm:latest
 
-          docker build -t jaronnie/gvm:${{ steps.get_version.outputs.VERSION }}-arm64 -f Dockerfile-arm64 .
-          docker push jaronnie/gvm:${{ steps.get_version.outputs.VERSION }}-arm64
-          docker tag jaronnie/gvm:${{ steps.get_version.outputs.VERSION }}-arm64 jaronnie/gvm:latest-arm64
-          docker push jaronnie/gvm:latest-arm64
+          docker build -t jaronnie/jcert-gm:${{ steps.get_version.outputs.VERSION }}-arm64 -f Dockerfile-arm64 .
+          docker push jaronnie/jcert-gm:${{ steps.get_version.outputs.VERSION }}-arm64
+          docker tag jaronnie/jcert-gm:${{ steps.get_version.outputs.VERSION }}-arm64 jaronnie/jcert-gm:latest-arm64
+          docker push jaronnie/jcert-gm:latest-arm64
