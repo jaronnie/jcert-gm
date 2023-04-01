@@ -25,6 +25,6 @@ jcert-gm match cert key                           # 检查私钥和证书是否�
 
 ## 鸣谢
 
-* [github.com/tjfoc/gmsm](github.com/tjfoc/gmsm)
-* [github.com/emmansun/gmsm](github.com/emmansun/gmsm)
+* [github.com/tjfoc/gmsm](https://github.com/tjfoc/gmsm)
+* [github.com/emmansun/gmsm](https://github.com/emmansun/gmsm)
 
