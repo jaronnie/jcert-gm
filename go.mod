@@ -1,6 +1,6 @@
 module github.com/jaronnie/jcert-gm
 
-go 1.20
+go 1.19
 
 require (
 	github.com/emmansun/gmsm v0.16.0

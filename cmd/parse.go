@@ -74,7 +74,7 @@ func parse(cmd *cobra.Command, args []string) error {
 			fmt.Printf("Organization: %s\n", strings.Join(parse.Subject.Organization, ","))
 			fmt.Printf("Organization Unit: %s\n", strings.Join(parse.Subject.OrganizationalUnit, ","))
 		}
-		count += 1
+		count++
 	}
 	return nil
 }
