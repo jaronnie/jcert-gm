@@ -27,7 +27,7 @@ var parseCmd = &cobra.Command{
 	RunE:  parse,
 }
 
-func parse(cmd *cobra.Command, args []string) error {
+func parse(_ *cobra.Command, args []string) error {
 	// 读取文件
 	file, err := os.ReadFile(args[0])
 	if err != nil {

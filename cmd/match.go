@@ -39,7 +39,7 @@ var matchCmd = &cobra.Command{
 	对消息进行签名，并使用公钥验证签名以及私钥和证书是否匹配
 */
 
-func match(cmd *cobra.Command, args []string) error {
+func match(_ *cobra.Command, args []string) error {
 	certF := args[0]
 	tf := args[1]
 
