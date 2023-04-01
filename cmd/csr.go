@@ -13,6 +13,8 @@ import (
 	"os"
 	"path/filepath"
 
+	ssm2 "github.com/emmansun/gmsm/sm2"
+	"github.com/emmansun/gmsm/smx509"
 	"github.com/spf13/cobra"
 	"github.com/tjfoc/gmsm/sm2"
 	"github.com/tjfoc/gmsm/x509"
@@ -35,6 +37,8 @@ var (
 	O    []string
 	OU   []string
 	Addr []string
+
+	EC bool
 )
 
 // csrCmd represents the csr command
@@ -80,9 +84,20 @@ func generateCsr() error {
 		return err
 	}
 
-	err = os.WriteFile(generatedKey, privateKeyPem, 0o755)
-	if err != nil {
-		return err
+	if EC {
+		ecPrivateKeyPem, err := transPkcs8PrivateKeyToEcPrivateKey(privateKeyBytes)
+		if err != nil {
+			return err
+		}
+		err = os.WriteFile(generatedKey, ecPrivateKeyPem, 0o755)
+		if err != nil {
+			return err
+		}
+	} else {
+		err = os.WriteFile(generatedKey, privateKeyPem, 0o755)
+		if err != nil {
+			return err
+		}
 	}
 
 	// 创建证书签名请求模板
@@ -116,6 +131,26 @@ func generateCsr() error {
 	return nil
 }
 
+func transPkcs8PrivateKeyToEcPrivateKey(der []byte) ([]byte, error) {
+	// 将 pkcs8 格式的私钥转化成 ecPrivateKey
+	key, err := smx509.ParsePKCS8PrivateKey(der)
+	if err != nil {
+		return nil, err
+	}
+	b, err := smx509.MarshalSM2PrivateKey(key.(*ssm2.PrivateKey))
+	if err != nil {
+		return nil, err
+	}
+
+	// 将证书签名请求保存到文件
+	pem := pem.EncodeToMemory(&pem.Block{
+		Type:  "EC PRIVATE KEY",
+		Bytes: b,
+	})
+
+	return pem, nil
+}
+
 func init() {
 	rootCmd.AddCommand(csrCmd)
 
@@ -125,6 +160,8 @@ func init() {
 	csrCmd.Flags().StringSliceVarP(&Addr, "addr", "", nil, "set dns addr")
 
 	csrCmd.Flags().StringVarP(&Path, "path", "p", "", "save path")
+
+	csrCmd.Flags().BoolVarP(&EC, "ec", "", false, "trans pkcs8 private key to ec private key")
 
 	_ = csrCmd.MarkFlagRequired("CN")
 }
