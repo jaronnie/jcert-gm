@@ -112,6 +112,23 @@ func match(_ *cobra.Command, args []string) error {
 		if err != nil {
 			return err
 		}
+
+		// 检查 public key 是否相同
+		privPubDer, err := smx509.MarshalPKIXPublicKey(&ecpk.PublicKey)
+		if err != nil {
+			return err
+		}
+		block := &pem.Block{
+			Type:  "PUBLIC KEY",
+			Bytes: privPubDer,
+		}
+		privPubPem := pem.EncodeToMemory(block)
+
+		if string(privPubPem) != string(pubPEM) {
+			fmt.Println(false)
+			return nil
+		}
+
 		// 使用 EC PRIVATE KEY 的校验逻辑
 		r, s, err := gsm2.SignWithSM2(rand.Reader, ecpk, nil, []byte("sign"))
 		if err != nil {
@@ -129,6 +146,16 @@ func match(_ *cobra.Command, args []string) error {
 	// 那么在使用相应的公钥对消息 "sign" 和签名结果 r 和 s 进行验证时，将会得到一个布尔值为 true 的结果，
 	// 表示签名有效。而如果签名结果不是由正确的私钥生成，那么验证将失败，并返回一个布尔值为 false。
 	// 因此，我们可以使用这个布尔值来判断签名是否有效。
+
+	// 先校验公钥是否相等
+	privPubPem, err := x509.WritePublicKeyToPem(&pk.PublicKey)
+	if err != nil {
+		return err
+	}
+	if string(privPubPem) != string(pubPEM) {
+		fmt.Println(false)
+		return nil
+	}
 
 	r, s, err := sm2.Sm2Sign(pk, []byte("sign"), nil, rand.Reader)
 	if err != nil {
