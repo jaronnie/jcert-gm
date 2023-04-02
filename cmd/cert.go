@@ -7,6 +7,7 @@ package cmd
 
 import (
 	"bytes"
+	"crypto/rand"
 	"encoding/base64"
 	"encoding/pem"
 	"fmt"
@@ -65,9 +66,16 @@ func generateCert() error {
 		return err
 	}
 
+	// 申请序列号
+	// 随机生成一个
+	serialNumber, err := rand.Int(rand.Reader, big.NewInt(1<<63-1))
+	if err != nil {
+		return err
+	}
+
 	// 创建证书模板
 	template := &x509.Certificate{
-		SerialNumber:       big.NewInt(1),
+		SerialNumber:       serialNumber,
 		Subject:            csr.Subject,
 		NotBefore:          time.Now(),
 		NotAfter:           time.Now().Add(365 * 24 * time.Hour),
