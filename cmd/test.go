@@ -7,7 +7,6 @@ package cmd
 
 import (
 	"encoding/pem"
-	"fmt"
 	"os"
 
 	"github.com/tjfoc/gmsm/x509"
@@ -26,6 +25,10 @@ var testCmd = &cobra.Command{
 		if err != nil {
 			return err
 		}
+
+		var ca *x509.Certificate
+		var cert *x509.Certificate
+
 		for {
 			keyBlock, rest := pem.Decode(p)
 			if keyBlock == nil {
@@ -35,9 +38,20 @@ var testCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			fmt.Println(c)
+			if c.IsCA {
+				ca = c
+			} else {
+				cert = c
+			}
+
 			p = rest
 		}
+
+		err = ca.CheckSignatureFrom(cert)
+		if err != nil {
+			return err
+		}
+
 		return nil
 	},
 }
