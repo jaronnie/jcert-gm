@@ -16,6 +16,7 @@ import (
 	"path/filepath"
 	"time"
 
+	"github.com/google/uuid"
 	"github.com/pkg/errors"
 
 	"github.com/emmansun/gmsm/pkcs7"
@@ -125,14 +126,14 @@ func generateCert() error {
 	certPEM := pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE", Bytes: derBytes})
 
 	if Output == "pem" {
-		generatedCert := filepath.Join(Path, fmt.Sprintf("%s.cert", csr.Subject.CommonName))
+		generatedCert := filepath.Join(Path, fmt.Sprintf("%s-%s-%s.cert", csr.Subject.CommonName, csr.Subject.OrganizationalUnit[0], uuid.New().String()[:6]))
 		pem := savaCertToPem(certPEM, caPEM)
 		_ = os.WriteFile(generatedCert, pem, 0o755)
 		return nil
 	}
 
 	if Output == "pkcs7" {
-		generatedCert := filepath.Join(Path, fmt.Sprintf("%s.p7b", csr.Subject.CommonName))
+		generatedCert := filepath.Join(Path, fmt.Sprintf("%s-%s-%s.p7b", csr.Subject.CommonName, csr.Subject.OrganizationalUnit[0], uuid.New().String()[:6]))
 		p7b, err := saveCertToPkcs7(certPEM, caPEM)
 		if err != nil {
 			return err
