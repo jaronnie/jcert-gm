@@ -11,8 +11,6 @@ import (
 	"os"
 	"strings"
 
-	stdx509 "crypto/x509"
-
 	"github.com/tjfoc/gmsm/x509"
 
 	"github.com/fatih/color"
@@ -35,8 +33,6 @@ func parse(_ *cobra.Command, args []string) error {
 	if err != nil {
 		return err
 	}
-
-	stdx509.CertificateRequest
 
 	count := 0
 
