@@ -74,20 +74,6 @@ func generateCert() error {
 		return err
 	}
 
-	// 创建证书模板
-	template := &x509.Certificate{
-		SerialNumber:       serialNumber,
-		Subject:            csr.Subject,
-		NotBefore:          time.Now(),
-		NotAfter:           time.Now().Add(365 * 24 * time.Hour),
-		SubjectKeyId:       []byte{1, 2, 3, 4, 6},
-		KeyUsage:           x509.KeyUsageDigitalSignature,
-		ExtKeyUsage:        []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageCodeSigning, x509.ExtKeyUsageEmailProtection},
-		PublicKeyAlgorithm: csr.PublicKeyAlgorithm,
-		SignatureAlgorithm: csr.SignatureAlgorithm,
-		DNSNames:           csr.DNSNames,
-	}
-
 	// 读取机构 ca 文件
 	caPEM, err := os.ReadFile(filepath.Join(configDir, "ca.cert"))
 	if err != nil {
@@ -114,6 +100,22 @@ func generateCert() error {
 	privateKey, err := x509.ReadPrivateKeyFromPem(caKey, nil)
 	if err != nil {
 		return err
+	}
+
+	// 创建证书模板
+	template := &x509.Certificate{
+		SerialNumber:          serialNumber,
+		Subject:               csr.Subject,
+		NotBefore:             time.Now(),
+		NotAfter:              time.Now().Add(365 * 24 * time.Hour),
+		SubjectKeyId:          []byte{1, 2, 3, 4, 6},
+		KeyUsage:              x509.KeyUsageDigitalSignature,
+		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageCodeSigning, x509.ExtKeyUsageEmailProtection},
+		PublicKeyAlgorithm:    csr.PublicKeyAlgorithm,
+		SignatureAlgorithm:    csr.SignatureAlgorithm,
+		DNSNames:              csr.DNSNames,
+		CRLDistributionPoints: viper.GetStringSlice("CRLDistributionPoints"),
+		OCSPServer:            viper.GetStringSlice("OCSPServer"),
 	}
 
 	// 使用SM2密钥对签名证书
