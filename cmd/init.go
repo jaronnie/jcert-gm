@@ -79,6 +79,16 @@ func generateAuthorityRootCA() error {
 	if err != nil {
 		return err
 	}
+
+	// create crl
+	crlBytes, err := caTemplate.CreateCRL(rand.Reader, caPrivKey, nil, time.Now(), time.Now().Add(time.Duration(time.Now().Year())*100))
+	if err != nil {
+		return err
+	}
+	err = os.WriteFile(filepath.Join(configDir, "crl.crl"), crlBytes, 0o755)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
