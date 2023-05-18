@@ -11,7 +11,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"math/big"
 	"os"
 	"path/filepath"
@@ -25,7 +24,7 @@ import (
 	"github.com/tjfoc/gmsm/x509"
 )
 
-func ApiRouter(rg *gin.RouterGroup) {
+func Router(rg *gin.RouterGroup) {
 	rg.POST("/upload", handleUpload)
 	rg.GET("/download/:filename", handleDownload)
 }
@@ -61,7 +60,7 @@ func handleUpload(c *gin.Context) {
 
 	// 生成证书
 	oid := uuid.New().String()
-	os.MkdirAll(filepath.Join("data", oid), 0o755)
+	_ = os.MkdirAll(filepath.Join("data", oid), 0o755)
 	for _, v := range s {
 		err = generateCert(v, filepath.Join("data", oid))
 		if err != nil {
@@ -233,7 +232,7 @@ func GetDirAllFilePathWithSuffix(dirname string, suffix string) ([]string, error
 func GetDirAllFilePath(dirname string) ([]string, error) {
 	// Remove the trailing path separator if dirname has.
 	dirname = strings.TrimSuffix(dirname, string(os.PathSeparator))
-	infos, err := ioutil.ReadDir(dirname)
+	infos, err := os.ReadDir(dirname)
 	if err != nil {
 		return nil, err
 	}
@@ -289,7 +288,7 @@ func UnpackTarGz(filename string, dest string) error {
 				return err
 			}
 		case tar.TypeReg:
-			os.MkdirAll(filepath.Dir(path), hdr.FileInfo().Mode())
+			_ = os.MkdirAll(filepath.Dir(path), hdr.FileInfo().Mode())
 			file, err := os.Create(path)
 			if err != nil {
 				return err

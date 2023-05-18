@@ -31,7 +31,7 @@ func Cors() gin.HandlerFunc {
 	}
 }
 
-func RunServer() {
+func RunServer() error {
 	e := gin.Default()
 	e.Use(Cors())
 	// redirect 到 /ui
@@ -43,7 +43,7 @@ func RunServer() {
 	static.Static(gen, public.Public)
 
 	apiv1 := e.Group("/api")
-	api.ApiRouter(apiv1)
+	api.Router(apiv1)
 
-	e.Run(":9999")
+	return e.Run(":9999")
 }
