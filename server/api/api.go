@@ -146,11 +146,21 @@ func generateCert(csrfp string, output string) error {
 	}
 
 	// 创建证书模板
+	// 获取签发证书的时间
+	var year, month, day int
+	i := viper.GetIntSlice("expiration")
+	if len(i) != 3 {
+		year = 100
+	} else {
+		year = i[0]
+		month = i[1]
+		day = i[2]
+	}
 	template := &x509.Certificate{
 		SerialNumber:          serialNumber,
 		Subject:               csr.Subject,
 		NotBefore:             time.Now(),
-		NotAfter:              time.Now().Add(365 * 24 * time.Hour),
+		NotAfter:              time.Now().AddDate(year, month, day),
 		SubjectKeyId:          []byte{1, 2, 3, 4, 6},
 		KeyUsage:              x509.KeyUsageDigitalSignature,
 		ExtKeyUsage:           []x509.ExtKeyUsage{x509.ExtKeyUsageClientAuth, x509.ExtKeyUsageServerAuth, x509.ExtKeyUsageCodeSigning, x509.ExtKeyUsageEmailProtection},
