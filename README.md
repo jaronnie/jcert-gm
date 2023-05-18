@@ -1,4 +1,5 @@
 # jcert-gm
+
 基于国密 sm2 算法的自签证书工具, 并保存为 pkcs7 格式.
 
 ## Usage
@@ -11,20 +12,12 @@ jcert-gm cert                                     # 根据 csr 生成 cert
 jcert-gm match cert key                           # 检查私钥和证书是否匹配
 ```
 
-## example
-
-```shell
-./generate.sh
-```
-
-将会生成 4 个节点证书, 1 个 sdk 证书, 1 个 tls 证书
-
 ## todo
 
 - [ ] jcert-gm scope
 
 ## 鸣谢
 
-* [github.com/tjfoc/gmsm](https://github.com/tjfoc/gmsm)
-* [github.com/emmansun/gmsm](https://github.com/emmansun/gmsm)
+- [github.com/tjfoc/gmsm](https://github.com/tjfoc/gmsm)
+- [github.com/emmansun/gmsm](https://github.com/emmansun/gmsm)
 
